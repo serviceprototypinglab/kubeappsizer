@@ -75,6 +75,18 @@ class DescriptorRewriter:
 		self.basedeployment["metadata"]["name"] = "rewritten-app"
 
 		for container in self.containers:
+			r = container.setdefault("resources", {})
+			l = container["resources"].setdefault("limits", {})
+			c = container["resources"]["limits"].setdefault("cpu", "500m")
+			if c[-1] == "m":
+				c = int(c[:-1])
+			else:
+				c = int(float(c) * 100)
+			c //= 5
+			print("# constrain to", c, "millicores")
+			container["resources"]["limits"]["cpu"] = "{}m".format(c)
+
+		for container in self.containers:
 			if "ports" in container:
 				for port in container["ports"]:
 					if "containerPort" in port:

@@ -1,15 +1,11 @@
 {
-  "status": {},
-  "metadata": {
-    "creationTimestamp": null,
-    "name": "rewritten-app"
-  },
   "spec": {
-    "replicas": 1,
     "template": {
       "spec": {
+        "restartPolicy": "Always",
         "containers": [
           {
+            "image": "mongo",
             "ports": [
               {
                 "containerPort": 27017,
@@ -17,10 +13,14 @@
               }
             ],
             "name": "arkismongopersistenta",
-            "resources": {},
-            "image": "mongo"
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           },
           {
+            "image": "mongo",
             "ports": [
               {
                 "containerPort": 27017,
@@ -28,105 +28,129 @@
               }
             ],
             "name": "arkismongopersistentusers",
-            "resources": {},
-            "image": "mongo"
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           },
           {
-            "env": [
-              {
-                "name": "DATABASE_HOST",
-                "value": "arkismongopersistent"
-              },
-              {
-                "name": "DATABASE_PORT",
-                "value": "30010"
-              }
-            ],
+            "image": "chumbo/arkisadddata:3.1.1",
             "ports": [
               {
                 "containerPort": 50004,
                 "protocol": "TCP"
               }
             ],
-            "name": "arkisdata",
-            "resources": {},
-            "image": "chumbo/arkisadddata:3.1.1"
-          },
-          {
             "env": [
               {
-                "name": "DATABASE_HOST",
-                "value": "arkismongopersistent"
+                "value": "arkismongopersistent",
+                "name": "DATABASE_HOST"
               },
               {
-                "name": "DATABASE_PORT",
-                "value": "30010"
+                "value": "30010",
+                "name": "DATABASE_PORT"
               }
             ],
+            "name": "arkisdata",
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          },
+          {
+            "image": "chumbo/arkisdocument:3.1.1",
             "ports": [
               {
                 "containerPort": 50003,
                 "protocol": "TCP"
               }
             ],
-            "name": "arkisdocument",
-            "resources": {},
-            "image": "chumbo/arkisdocument:3.1.1"
-          },
-          {
             "env": [
               {
-                "name": "DATABASE_HOST",
-                "value": "arkismongopersistentusers"
+                "value": "arkismongopersistent",
+                "name": "DATABASE_HOST"
               },
               {
-                "name": "DATABASE_PORT",
-                "value": "30009"
+                "value": "30010",
+                "name": "DATABASE_PORT"
               }
             ],
+            "name": "arkisdocument",
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          },
+          {
+            "image": "chumbo/arkisusers:3.1.1",
             "ports": [
               {
                 "containerPort": 50000,
                 "protocol": "TCP"
               }
             ],
-            "name": "arkisuser",
-            "resources": {},
-            "image": "chumbo/arkisusers:3.1.1"
-          },
-          {
             "env": [
               {
-                "name": "DATABASE_HOST",
-                "value": "arkismongopersistent"
+                "value": "arkismongopersistentusers",
+                "name": "DATABASE_HOST"
               },
               {
-                "name": "DATABASE_PORT",
-                "value": "30010"
+                "value": "30009",
+                "name": "DATABASE_PORT"
               }
             ],
+            "name": "arkisuser",
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          },
+          {
+            "image": "chumbo/arkissearch:3.1.1",
             "ports": [
               {
                 "containerPort": 50001,
                 "protocol": "TCP"
               }
             ],
+            "env": [
+              {
+                "value": "arkismongopersistent",
+                "name": "DATABASE_HOST"
+              },
+              {
+                "value": "30010",
+                "name": "DATABASE_PORT"
+              }
+            ],
             "name": "arkissearch",
-            "resources": {},
-            "image": "chumbo/arkissearch:3.1.1"
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           },
           {
+            "image": "chumbo/arkismigrate:3.1.1",
             "ports": [
               {
-                "containerPort": 50002,
-                "protocol": "TCP"
+                "protocol": "TCP",
+                "containerPort": 50002
               }
             ],
             "name": "arkismigrate",
-            "resources": {},
-            "image": "chumbo/arkismigrate:3.1.1"
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           },
           {
+            "image": "chumbo/arkisadminfrontend:3.0",
             "ports": [
               {
                 "containerPort": 80,
@@ -134,10 +158,14 @@
               }
             ],
             "name": "arkisadminfrontend",
-            "resources": {},
-            "image": "chumbo/arkisadminfrontend:3.0"
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           },
           {
+            "image": "chumbo/arkisuserfrontend:3.1",
             "ports": [
               {
                 "containerPort": 80,
@@ -145,10 +173,14 @@
               }
             ],
             "name": "arkisuserfrontend",
-            "resources": {},
-            "image": "chumbo/arkisuserfrontend:3.1"
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           },
           {
+            "image": "chumbo/arkisloginfrontend:3.0",
             "ports": [
               {
                 "containerPort": 80,
@@ -156,22 +188,30 @@
               }
             ],
             "name": "arkisloginfrontend",
-            "resources": {},
-            "image": "chumbo/arkisloginfrontend:3.0"
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           }
-        ],
-        "restartPolicy": "Always"
+        ]
       },
       "metadata": {
-        "creationTimestamp": null,
         "labels": {
           "namespaceLabel": "arkis",
           "service": "arkismongopersistenta"
-        }
+        },
+        "creationTimestamp": null
       }
     },
+    "replicas": 1,
     "strategy": {}
   },
   "kind": "Deployment",
+  "status": {},
+  "metadata": {
+    "creationTimestamp": null,
+    "name": "rewritten-app"
+  },
   "apiVersion": "extensions/v1beta1"
 }
