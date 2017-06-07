@@ -5,7 +5,6 @@ import json
 import os
 import yaml
 import sys
-import shutil
 
 def has_keychain(d, keychain):
 	if keychain[0] in d:
@@ -36,7 +35,6 @@ class DescriptorRewriter:
 				if filename == "output.json":
 					continue
 				path = os.path.join(root, filename)
-				#print(path)
 				if filename.endswith(".yaml"):
 					self.files.append(path)
 				elif filename.endswith(".json"):
@@ -44,14 +42,12 @@ class DescriptorRewriter:
 
 	def parse(self):
 		for filename in self.files:
-			#print("/p", filename)
 			if filename.endswith(".yaml"):
 				self.objects.append(yaml.load(open(filename)))
 			elif filename.endswith(".json"):
 				self.objects.append(json.load(open(filename)))
 			self.objects[-1]["*origin*"] = filename
 
-		#print(self.objects)
 		for obj in self.objects:
 			if "kind" in obj:
 				if obj["kind"] == "Namespace":
@@ -133,15 +129,11 @@ class DescriptorRewriter:
 		f.close()
 
 		for exclusion in exclusions:
-			#shutil.copy(exclusion, "output")
-			##self.originfiles[container["name"]] = obj["*origin*"]
 			for obj in self.objects:
 				if "*origin*" in obj and obj["*origin*"] == exclusion:
-					#print(exclusion)
 					containers = []
 					for container in self.containers:
 						if self.originfiles[container["name"]] == exclusion:
-							#print("**", container["name"])
 							containers.append(container)
 					obj["spec"]["template"]["spec"]["containers"] = containers
 					del obj["*origin*"]
@@ -153,13 +145,10 @@ class DescriptorRewriter:
 		for obj in self.objects:
 			if "kind" in obj:
 				if obj["kind"] == "Service":
-					#if has_keychain(obj, ["metadata", "labels"]):
-					#	labels = obj["metadata"]["labels"]
 					if has_keychain(obj, ["spec", "selector"]):
 						labels = obj["spec"]["selector"]
 						match = False
 						for label in labels:
-							#print("# label in", obj["metadata"]["name"], ":", label, "=", labels[label])
 							for slabel in self.labels:
 								if slabel[0] == label and slabel[1] == labels[label]:
 									print("# rewrite label selector", label)
