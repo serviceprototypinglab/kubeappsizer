@@ -1,0 +1,172 @@
+{
+  "apiVersion": "extensions/v1beta1",
+  "kind": "Deployment",
+  "metadata": {
+    "creationTimestamp": null,
+    "name": "rewritten-app"
+  },
+  "spec": {
+    "replicas": 1,
+    "strategy": {},
+    "template": {
+      "metadata": {
+        "creationTimestamp": null,
+        "labels": {
+          "namespaceLabel": "arkis",
+          "service": "arkismongopersistenta"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "image": "mongo",
+            "name": "arkismongopersistenta",
+            "ports": [
+              {
+                "containerPort": 27017,
+                "protocol": "TCP"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          },
+          {
+            "env": [
+              {
+                "name": "DATABASE_HOST",
+                "value": "arkismongopersistent"
+              },
+              {
+                "name": "DATABASE_PORT",
+                "value": "30010"
+              }
+            ],
+            "image": "chumbo/arkisadddata:3.1.1",
+            "name": "arkisdata",
+            "ports": [
+              {
+                "containerPort": 50004,
+                "protocol": "TCP"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          },
+          {
+            "env": [
+              {
+                "name": "DATABASE_HOST",
+                "value": "arkismongopersistent"
+              },
+              {
+                "name": "DATABASE_PORT",
+                "value": "30010"
+              }
+            ],
+            "image": "chumbo/arkisdocument:3.1.1",
+            "name": "arkisdocument",
+            "ports": [
+              {
+                "containerPort": 50003,
+                "protocol": "TCP"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          },
+          {
+            "env": [
+              {
+                "name": "DATABASE_HOST",
+                "value": "arkismongopersistentusers"
+              },
+              {
+                "name": "DATABASE_PORT",
+                "value": "30009"
+              }
+            ],
+            "image": "chumbo/arkisusers:3.1.1",
+            "name": "arkisuser",
+            "ports": [
+              {
+                "containerPort": 50000,
+                "protocol": "TCP"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          },
+          {
+            "env": [
+              {
+                "name": "DATABASE_HOST",
+                "value": "arkismongopersistent"
+              },
+              {
+                "name": "DATABASE_PORT",
+                "value": "30010"
+              }
+            ],
+            "image": "chumbo/arkissearch:3.1.1",
+            "name": "arkissearch",
+            "ports": [
+              {
+                "containerPort": 50001,
+                "protocol": "TCP"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          },
+          {
+            "image": "chumbo/arkismigrate:3.1.1",
+            "name": "arkismigrate",
+            "ports": [
+              {
+                "containerPort": 50002,
+                "protocol": "TCP"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          },
+          {
+            "image": "chumbo/arkisadminfrontend:3.0",
+            "name": "arkisadminfrontend",
+            "ports": [
+              {
+                "containerPort": 80,
+                "protocol": "TCP"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
+          }
+        ],
+        "restartPolicy": "Always"
+      }
+    }
+  },
+  "status": {}
+}

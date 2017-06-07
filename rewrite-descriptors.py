@@ -5,6 +5,7 @@ import json
 import os
 import yaml
 import sys
+import shutil
 
 def has_keychain(d, keychain):
 	if keychain[0] in d:
@@ -21,6 +22,7 @@ class DescriptorRewriter:
 		self.containers = []
 		self.basedeployment = None
 		self.ports = []
+		self.originfiles = {}
 
 	def scandir(self, rootdir):
 		if rootdir.endswith(".yaml"):
@@ -45,6 +47,7 @@ class DescriptorRewriter:
 				self.objects.append(yaml.load(open(filename)))
 			elif filename.endswith(".json"):
 				self.objects.append(json.load(open(filename)))
+			self.objects[-1]["*origin*"] = filename
 
 		#print(self.objects)
 		for obj in self.objects:
@@ -64,15 +67,12 @@ class DescriptorRewriter:
 					if has_keychain(obj, ["spec", "template", "spec", "containers"]):
 						containers = obj["spec"]["template"]["spec"]["containers"]
 						self.containers += containers
+						for container in containers:
+							self.originfiles[container["name"]] = obj["*origin*"]
 				elif obj["kind"] == "Service":
 					pass
 				else:
 					raise Exception("Unknown kind {}".format(obj["kind"]))
-
-		print("# merge", len(self.containers), "containers into a single deployment")
-
-		self.basedeployment["spec"]["template"]["spec"]["containers"] = self.containers
-		self.basedeployment["metadata"]["name"] = "rewritten-app"
 
 		for container in self.containers:
 			r = container.setdefault("resources", {})
@@ -86,20 +86,36 @@ class DescriptorRewriter:
 			print("# constrain to", c, "millicores")
 			container["resources"]["limits"]["cpu"] = "{}m".format(c)
 
+		exclusions = []
+		joinedcontainers = []
 		for container in self.containers:
 			if "ports" in container:
 				for port in container["ports"]:
 					if "containerPort" in port:
 						portnum = port["containerPort"]
 						if portnum in self.ports:
-							print("! port conflict", portnum)
+							exclusion = self.originfiles[container["name"]]
+							exclusions.append(exclusion)
+							print("! port conflict", portnum, "excluding", exclusion)
 						else:
 							self.ports.append(portnum)
+							joinedcontainers.append(container)
+
+		print("# merge", len(joinedcontainers), "out of", len(joinedcontainers) + len(exclusions), "containers into a single deployment")
+
+		self.basedeployment["spec"]["template"]["spec"]["containers"] = joinedcontainers
+		self.basedeployment["metadata"]["name"] = "rewritten-app"
+		del self.basedeployment["*origin*"]
+
+		os.makedirs("output", exist_ok=True)
 
 		print("# rewrite into output.json")
-		f = open("output.json", "w")
-		json.dump(self.basedeployment, f, indent=2)
+		f = open("output/output.json", "w")
+		json.dump(self.basedeployment, f, indent=2, sort_keys=True)
 		f.close()
+
+		for exclusion in exclusions:
+			shutil.copy(exclusion, "output")
 
 dirs = ["."]
 if len(sys.argv) > 1:
