@@ -1,0 +1,72 @@
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "creationTimestamp": null,
+    "labels": {
+      "namespaceLabel": "arkis",
+      "service": "arkismongopersistenta"
+    },
+    "name": "rewritten-service"
+  },
+  "spec": {
+    "ports": [
+      {
+        "name": "arkismongopersistenta",
+        "nodePort": 30005,
+        "port": 30005,
+        "protocol": "TCP",
+        "targetPort": 27017
+      },
+      {
+        "name": "50004",
+        "nodePort": 30002,
+        "port": 50004,
+        "protocol": "TCP",
+        "targetPort": 50004
+      },
+      {
+        "name": "50003",
+        "nodePort": 31999,
+        "port": 50003,
+        "protocol": "TCP",
+        "targetPort": 50003
+      },
+      {
+        "name": "50000",
+        "nodePort": 30001,
+        "port": 50000,
+        "protocol": "TCP",
+        "targetPort": 50000
+      },
+      {
+        "name": "50001",
+        "nodePort": 30004,
+        "port": 50001,
+        "protocol": "TCP",
+        "targetPort": 50001
+      },
+      {
+        "name": "arkismigrate",
+        "nodePort": 30003,
+        "port": 50002,
+        "protocol": "TCP",
+        "targetPort": 50002
+      },
+      {
+        "name": "32002",
+        "nodePort": 32002,
+        "port": 80,
+        "protocol": "TCP",
+        "targetPort": 80
+      }
+    ],
+    "selector": {
+      "powerSelector": "rewritten-app"
+    },
+    "type": "NodePort"
+  },
+  "status": {
+    "loadBalancer": {}
+  }
+}

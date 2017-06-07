@@ -21,8 +21,10 @@ class DescriptorRewriter:
 		self.label = None
 		self.containers = []
 		self.basedeployment = None
+		self.baseservice = None
 		self.ports = []
 		self.originfiles = {}
+		self.labels = []
 
 	def scandir(self, rootdir):
 		if rootdir.endswith(".yaml"):
@@ -59,20 +61,26 @@ class DescriptorRewriter:
 				elif obj["kind"] == "Deployment":
 					if not self.basedeployment:
 						self.basedeployment = obj
-					if has_keychain(obj, ["metadata", "namespace"]):
-						ns = obj["metadata"]["namespace"]
-						print("# convert namespace {} to label".format(ns))
-						obj["spec"]["template"]["metadata"]["labels"]["namespaceLabel"] = ns
-						del obj["metadata"]["namespace"]
 					if has_keychain(obj, ["spec", "template", "spec", "containers"]):
 						containers = obj["spec"]["template"]["spec"]["containers"]
 						self.containers += containers
 						for container in containers:
 							self.originfiles[container["name"]] = obj["*origin*"]
 				elif obj["kind"] == "Service":
-					pass
+					if not self.baseservice:
+						self.baseservice = obj
 				else:
 					raise Exception("Unknown kind {}".format(obj["kind"]))
+
+				if obj["kind"] in ("Deployment", "Service"):
+					if has_keychain(obj, ["metadata", "namespace"]):
+						ns = obj["metadata"]["namespace"]
+						print("# convert namespace {} to label".format(ns))
+						if obj["kind"] == "Deployment":
+							obj["spec"]["template"]["metadata"]["labels"]["namespaceLabel"] = ns
+						elif obj["kind"] == "Service":
+							obj["metadata"]["labels"]["namespaceLabel"] = ns
+						del obj["metadata"]["namespace"]
 
 		for container in self.containers:
 			r = container.setdefault("resources", {})
@@ -101,21 +109,78 @@ class DescriptorRewriter:
 							self.ports.append(portnum)
 							joinedcontainers.append(container)
 
+							for obj in self.objects:
+								if obj["*origin*"] == self.originfiles[container["name"]]:
+									if has_keychain(obj, ["spec", "template", "metadata", "labels"]):
+										labels = obj["spec"]["template"]["metadata"]["labels"]
+										for label in labels:
+											self.labels.append((label, labels[label]))
+
 		print("# merge", len(joinedcontainers), "out of", len(joinedcontainers) + len(exclusions), "containers into a single deployment")
 
 		self.basedeployment["spec"]["template"]["spec"]["containers"] = joinedcontainers
+		self.basedeployment["spec"]["template"]["metadata"]["labels"]["powerSelector"] = "rewritten-app"
 		self.basedeployment["metadata"]["name"] = "rewritten-app"
 		del self.basedeployment["*origin*"]
 
-		os.makedirs("output", exist_ok=True)
+		output = "output"
+
+		os.makedirs(output, exist_ok=True)
 
 		print("# rewrite into output.json")
-		f = open("output/output.json", "w")
+		f = open(os.path.join(output, "output-deployment.json"), "w")
 		json.dump(self.basedeployment, f, indent=2, sort_keys=True)
 		f.close()
 
 		for exclusion in exclusions:
-			shutil.copy(exclusion, "output")
+			#shutil.copy(exclusion, "output")
+			##self.originfiles[container["name"]] = obj["*origin*"]
+			for obj in self.objects:
+				if "*origin*" in obj and obj["*origin*"] == exclusion:
+					#print(exclusion)
+					containers = []
+					for container in self.containers:
+						if self.originfiles[container["name"]] == exclusion:
+							#print("**", container["name"])
+							containers.append(container)
+					obj["spec"]["template"]["spec"]["containers"] = containers
+					del obj["*origin*"]
+					f = open(os.path.join(output, os.path.basename(exclusion)), "w")
+					json.dump(obj, f, indent=2, sort_keys=True)
+					f.close()
+
+		ports = []
+		for obj in self.objects:
+			if "kind" in obj:
+				if obj["kind"] == "Service":
+					#if has_keychain(obj, ["metadata", "labels"]):
+					#	labels = obj["metadata"]["labels"]
+					if has_keychain(obj, ["spec", "selector"]):
+						labels = obj["spec"]["selector"]
+						match = False
+						for label in labels:
+							#print("# label in", obj["metadata"]["name"], ":", label, "=", labels[label])
+							for slabel in self.labels:
+								if slabel[0] == label and slabel[1] == labels[label]:
+									print("# rewrite label selector", label)
+									match = True
+
+					if match:
+						ports += obj["spec"]["ports"]
+					else:
+						f = open(os.path.join(output, os.path.basename(obj["*origin*"])), "w")
+						del obj["*origin*"]
+						json.dump(obj, f, indent=2, sort_keys=True)
+						f.close()
+
+		del self.baseservice["*origin*"]
+		self.baseservice["spec"]["selector"] = {"powerSelector": "rewritten-app"}
+		self.baseservice["spec"]["ports"] = ports
+		self.baseservice["metadata"]["name"] = "rewritten-service"
+
+		f = open(os.path.join(output, "output-service.json"), "w")
+		json.dump(self.baseservice, f, indent=2, sort_keys=True)
+		f.close()
 
 dirs = ["."]
 if len(sys.argv) > 1:

@@ -1,38 +1,42 @@
 {
-  "kind": "Deployment",
   "apiVersion": "extensions/v1beta1",
+  "kind": "Deployment",
   "metadata": {
-    "name": "arkisloginfrontend",
-    "namespace": "arkis",
-    "creationTimestamp": null
+    "creationTimestamp": null,
+    "name": "arkisloginfrontend"
   },
   "spec": {
     "replicas": 1,
+    "strategy": {},
     "template": {
       "metadata": {
         "creationTimestamp": null,
         "labels": {
+          "namespaceLabel": "arkis",
           "service": "arkisloginfrontend"
         }
       },
       "spec": {
         "containers": [
           {
-            "name": "arkisloginfrontend",
             "image": "chumbo/arkisloginfrontend:3.0",
+            "name": "arkisloginfrontend",
             "ports": [
               {
                 "containerPort": 80,
                 "protocol": "TCP"
               }
             ],
-            "resources": {}
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           }
         ],
         "restartPolicy": "Always"
       }
-    },
-    "strategy": {}
+    }
   },
   "status": {}
 }

@@ -1,38 +1,42 @@
 {
-  "kind": "Deployment",
   "apiVersion": "extensions/v1beta1",
+  "kind": "Deployment",
   "metadata": {
-    "name": "arkisuserfrontend",
-    "namespace": "arkis",
-    "creationTimestamp": null
+    "creationTimestamp": null,
+    "name": "arkisuserfrontend"
   },
   "spec": {
     "replicas": 1,
+    "strategy": {},
     "template": {
       "metadata": {
         "creationTimestamp": null,
         "labels": {
+          "namespaceLabel": "arkis",
           "service": "arkisuserfrontend"
         }
       },
       "spec": {
         "containers": [
           {
-            "name": "arkisuserfrontend",
             "image": "chumbo/arkisuserfrontend:3.1",
+            "name": "arkisuserfrontend",
             "ports": [
               {
                 "containerPort": 80,
                 "protocol": "TCP"
               }
             ],
-            "resources": {}
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           }
         ],
         "restartPolicy": "Always"
       }
-    },
-    "strategy": {}
+    }
   },
   "status": {}
 }

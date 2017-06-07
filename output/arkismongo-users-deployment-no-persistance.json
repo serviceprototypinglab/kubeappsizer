@@ -1,38 +1,42 @@
 {
-  "kind": "Deployment",
   "apiVersion": "extensions/v1beta1",
+  "kind": "Deployment",
   "metadata": {
-    "name": "arkismongopersistentusers",
-    "namespace": "arkis",
-    "creationTimestamp": null
+    "creationTimestamp": null,
+    "name": "arkismongopersistentusers"
   },
   "spec": {
     "replicas": 1,
+    "strategy": {},
     "template": {
       "metadata": {
         "creationTimestamp": null,
         "labels": {
+          "namespaceLabel": "arkis",
           "service": "arkismongopersistentusers"
         }
       },
       "spec": {
         "containers": [
           {
-            "name": "arkismongopersistentusers",
             "image": "mongo",
+            "name": "arkismongopersistentusers",
             "ports": [
               {
                 "containerPort": 27017,
                 "protocol": "TCP"
               }
             ],
-            "resources": {}
+            "resources": {
+              "limits": {
+                "cpu": "100m"
+              }
+            }
           }
         ],
         "restartPolicy": "Always"
       }
-    },
-    "strategy": {}
+    }
   },
   "status": {}
 }

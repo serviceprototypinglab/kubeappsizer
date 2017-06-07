@@ -13,6 +13,7 @@
         "creationTimestamp": null,
         "labels": {
           "namespaceLabel": "arkis",
+          "powerSelector": "rewritten-app",
           "service": "arkismongopersistenta"
         }
       },
