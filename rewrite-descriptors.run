@@ -1,0 +1,9 @@
+if [ ! -d arkismicroservices ]
+then
+	git clone git@srv-lab-t-401.zhaw.ch:arkis/arkismicroservices.git
+fi
+
+./rewrite-descriptors.py \
+	arkismicroservices/KubernetesBlueprints/DatabaseMicroServices/nopersistance/ \
+	arkismicroservices/KubernetesBlueprints/BackendMicroServices/ \
+	arkismicroservices/KubernetesBlueprints/FrontendMicroServices/

@@ -1,0 +1,177 @@
+{
+  "status": {},
+  "metadata": {
+    "creationTimestamp": null,
+    "name": "rewritten-app"
+  },
+  "spec": {
+    "replicas": 1,
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "ports": [
+              {
+                "containerPort": 27017,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkismongopersistenta",
+            "resources": {},
+            "image": "mongo"
+          },
+          {
+            "ports": [
+              {
+                "containerPort": 27017,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkismongopersistentusers",
+            "resources": {},
+            "image": "mongo"
+          },
+          {
+            "env": [
+              {
+                "name": "DATABASE_HOST",
+                "value": "arkismongopersistent"
+              },
+              {
+                "name": "DATABASE_PORT",
+                "value": "30010"
+              }
+            ],
+            "ports": [
+              {
+                "containerPort": 50004,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkisdata",
+            "resources": {},
+            "image": "chumbo/arkisadddata:3.1.1"
+          },
+          {
+            "env": [
+              {
+                "name": "DATABASE_HOST",
+                "value": "arkismongopersistent"
+              },
+              {
+                "name": "DATABASE_PORT",
+                "value": "30010"
+              }
+            ],
+            "ports": [
+              {
+                "containerPort": 50003,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkisdocument",
+            "resources": {},
+            "image": "chumbo/arkisdocument:3.1.1"
+          },
+          {
+            "env": [
+              {
+                "name": "DATABASE_HOST",
+                "value": "arkismongopersistentusers"
+              },
+              {
+                "name": "DATABASE_PORT",
+                "value": "30009"
+              }
+            ],
+            "ports": [
+              {
+                "containerPort": 50000,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkisuser",
+            "resources": {},
+            "image": "chumbo/arkisusers:3.1.1"
+          },
+          {
+            "env": [
+              {
+                "name": "DATABASE_HOST",
+                "value": "arkismongopersistent"
+              },
+              {
+                "name": "DATABASE_PORT",
+                "value": "30010"
+              }
+            ],
+            "ports": [
+              {
+                "containerPort": 50001,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkissearch",
+            "resources": {},
+            "image": "chumbo/arkissearch:3.1.1"
+          },
+          {
+            "ports": [
+              {
+                "containerPort": 50002,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkismigrate",
+            "resources": {},
+            "image": "chumbo/arkismigrate:3.1.1"
+          },
+          {
+            "ports": [
+              {
+                "containerPort": 80,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkisadminfrontend",
+            "resources": {},
+            "image": "chumbo/arkisadminfrontend:3.0"
+          },
+          {
+            "ports": [
+              {
+                "containerPort": 80,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkisuserfrontend",
+            "resources": {},
+            "image": "chumbo/arkisuserfrontend:3.1"
+          },
+          {
+            "ports": [
+              {
+                "containerPort": 80,
+                "protocol": "TCP"
+              }
+            ],
+            "name": "arkisloginfrontend",
+            "resources": {},
+            "image": "chumbo/arkisloginfrontend:3.0"
+          }
+        ],
+        "restartPolicy": "Always"
+      },
+      "metadata": {
+        "creationTimestamp": null,
+        "labels": {
+          "namespaceLabel": "arkis",
+          "service": "arkismongopersistenta"
+        }
+      }
+    },
+    "strategy": {}
+  },
+  "kind": "Deployment",
+  "apiVersion": "extensions/v1beta1"
+}
