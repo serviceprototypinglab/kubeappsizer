@@ -37,21 +37,14 @@ class DescriptorRewriter:
 				elif filename.endswith(".json"):
 					self.files.append(path)
 
-	def parse(self):
-		for filename in self.files:
-			if filename.endswith(".yaml"):
-				self.objects.append(yaml.load(open(filename)))
-			elif filename.endswith(".json"):
-				self.objects.append(json.load(open(filename)))
-			self.objects[-1]["*origin*"] = filename
-
-		for obj in self.objects:
+	def scanobjects(self, objects):
+		for obj in objects:
 			if "kind" in obj:
 				if obj["kind"] == "Namespace":
 					ns = obj["metadata"]["name"]
 					print("# convert namespace {} to label".format(ns))
 					self.label = ns
-				elif obj["kind"] == "Deployment":
+				elif obj["kind"] in ("Deployment", "DeploymentConfig"):
 					if not self.basedeployment:
 						self.basedeployment = obj
 					if has_keychain(obj, ["spec", "template", "spec", "containers"]):
@@ -62,18 +55,36 @@ class DescriptorRewriter:
 				elif obj["kind"] == "Service":
 					if not self.baseservice:
 						self.baseservice = obj
+				elif obj["kind"] in ("BuildConfig", "Build", "ImageStream", "Route", "Pod", "ReplicationController"):
+					print("# ignore {}".format(obj["kind"]))
+				elif obj["kind"] == "List":
+					print("# recurse into list")
+					for item in obj["items"]:
+						item["*origin*"] = obj["*origin*"]
+					self.scanobjects(obj["items"])
 				else:
 					raise Exception("Unknown kind {}".format(obj["kind"]))
 
-				if obj["kind"] in ("Deployment", "Service"):
+				if obj["kind"] in ("Deployment", "DeploymentConfig", "Service"):
 					if has_keychain(obj, ["metadata", "namespace"]):
 						ns = obj["metadata"]["namespace"]
 						print("# convert namespace {} to label".format(ns))
 						if obj["kind"] == "Deployment":
 							obj["spec"]["template"]["metadata"]["labels"]["namespaceLabel"] = ns
 						elif obj["kind"] == "Service":
-							obj["metadata"]["labels"]["namespaceLabel"] = ns
+							if has_keychain(obj, ["metadata", "labels"]):
+								obj["metadata"]["labels"]["namespaceLabel"] = ns
 						del obj["metadata"]["namespace"]
+
+	def parse(self):
+		for filename in self.files:
+			if filename.endswith(".yaml"):
+				self.objects.append(yaml.load(open(filename)))
+			elif filename.endswith(".json"):
+				self.objects.append(json.load(open(filename)))
+			self.objects[-1]["*origin*"] = filename
+
+		self.scanobjects(self.objects)
 
 		for container in self.containers:
 			r = container.setdefault("resources", {})
@@ -132,7 +143,10 @@ class DescriptorRewriter:
 					for container in self.containers:
 						if self.originfiles[container["name"]] == exclusion:
 							containers.append(container)
-					obj["spec"]["template"]["spec"]["containers"] = containers
+					if has_keychain(obj, ["spec", "template", "spec"]):
+						obj["spec"]["template"]["spec"]["containers"] = containers
+					else:
+						print("# warning (bug!): not updating containers assignment, probably due to list object")
 					del obj["*origin*"]
 					f = open(os.path.join(output, os.path.basename(exclusion)), "w")
 					json.dump(obj, f, indent=2, sort_keys=True)
