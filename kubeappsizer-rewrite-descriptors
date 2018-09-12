@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+
+import descriptorrewriter.descriptorrewriter
+
+import sys
+
+dirs = ["."]
+if len(sys.argv) > 1:
+	dirs = sys.argv[1:]
+
+dr = descriptorrewriter.descriptorrewriter.DescriptorRewriter()
+for dirname in dirs:
+	dr.scandir(dirname)
+dr.parse()

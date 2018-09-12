@@ -1,2 +1,6 @@
 arkismicroservices
 output
+*.pyc
+build
+dist
+*.egg-info

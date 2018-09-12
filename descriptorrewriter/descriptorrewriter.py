@@ -1,10 +1,7 @@
-#!/usr/bin/env python3
-
 import glob
 import json
 import os
 import yaml
-import sys
 
 def has_keychain(d, keychain):
 	if keychain[0] in d:
@@ -170,12 +167,3 @@ class DescriptorRewriter:
 		f = open(os.path.join(output, "output-service.json"), "w")
 		json.dump(self.baseservice, f, indent=2, sort_keys=True)
 		f.close()
-
-dirs = ["."]
-if len(sys.argv) > 1:
-	dirs = sys.argv[1:]
-
-dr = DescriptorRewriter()
-for dirname in dirs:
-	dr.scandir(dirname)
-dr.parse()
