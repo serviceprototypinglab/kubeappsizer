@@ -29,7 +29,7 @@ class DescriptorRewriter:
 			self.files.append(rootdir)
 		for root, dirs, files in os.walk(rootdir):
 			for filename in files:
-				if filename == "output.json":
+				if filename in ("output.json", "output-deployment.json", "output-service.json"):
 					continue
 				path = os.path.join(root, filename)
 				if filename.endswith(".yaml"):
@@ -76,7 +76,7 @@ class DescriptorRewriter:
 								obj["metadata"]["labels"]["namespaceLabel"] = ns
 						del obj["metadata"]["namespace"]
 
-	def parse(self):
+	def parse(self, output="output"):
 		for filename in self.files:
 			if filename.endswith(".yaml"):
 				self.objects.append(yaml.load(open(filename)))
@@ -127,11 +127,9 @@ class DescriptorRewriter:
 		self.basedeployment["metadata"]["name"] = "rewritten-app"
 		del self.basedeployment["*origin*"]
 
-		output = "output"
-
 		os.makedirs(output, exist_ok=True)
 
-		print("# rewrite into output.json")
+		print("# rewrite into output-*.json")
 		f = open(os.path.join(output, "output-deployment.json"), "w")
 		json.dump(self.basedeployment, f, indent=2, sort_keys=True)
 		f.close()
